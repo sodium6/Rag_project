@@ -60,11 +60,11 @@ embedder = RemoteEmbedder(token=HF_TOKEN)    # ← ชื่อและ method 
 #         port="5432"
 #     )
 
-USER     = os.getenv("USER")
-PASSWORD = os.getenv("PASSWORD")
-HOST     = os.getenv("HOST")
-PORT     = os.getenv("PORT", "6543")
-DBNAME   = os.getenv("DBNAME", "postgres")
+USER     = os.getenv("DB_USER")
+PASSWORD = os.getenv("DB_PASSWORD")
+HOST     = os.getenv("DB_HOST")
+PORT     = os.getenv("DB_PORT", "6543")   #← เปลี่ยนชื่อคีย์
+DBNAME   = os.getenv("DB_NAME", "postgres")
 
 def get_db_conn():
 # Connect to the database
