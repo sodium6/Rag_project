@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>AI Chatbot สินค้า</title>
+  <link rel="stylesheet" href="../static/style.css">
+  <style>
+
+  </style>
+</head>
+
+<body>
+
+  <!-- หัวข้อ -->
+  <div class="chat-product-container">
+    <!-- กล่องเพิ่มข้อมูลสินค้า -->
+    <div class="product-box">
+
+      <form id="addForm" class="inputform">
+        <h2> เพิ่มข้อมูลสินค้า</h2>
+        <label for="product">ชื่อสินค้า</label>
+        <input type="text" name="product" id="product" placeholder="ชื่อสินค้า" required>
+
+        <label for="detail">รายละเอียดสินค้า</label>
+        <textarea name="detail" id="detail" rows="4" placeholder="รายละเอียดสินค้า" required></textarea>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label for="price">ราคา</label>
+            <input type="number" name="price" id="price" placeholder="ราคา" required>
+          </div>
+          <div class="input-group">
+            <label for="quantity">จำนวน</label>
+            <input type="number" name="quantity" id="quantity" placeholder="จำนวน" required>
+          </div>
+          <div class="input-group">
+            <label for="category">ประเภทสินค้า</label>
+            <select name="category" id="category" required>
+              <option value="" disabled selected>-- เลือกหมวดหมู่ --</option>
+              <option value="โน้ตบุ๊ค/คอมพิวเตอร์">โน้ตบุ๊ค/คอมพิวเตอร์</option>
+              <option value="อุปกรณ์ต่อพ่วง">อุปกรณ์ต่อพ่วง</option>
+              <option value="อุปกรณ์พกพา/มือถือ">อุปกรณ์พกพา/มือถือ</option>
+              <option value="เครื่องใช้ไฟฟ้าในบ้าน">เครื่องใช้ไฟฟ้าในบ้าน</option>
+              <option value="อุปกรณ์สำนักงาน">อุปกรณ์สำนักงาน</option>
+            </select>
+          </div>
+
+        </div>
+
+        <button type="submit">เพิ่มสินค้า</button>
+      </form>
+
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>สินค้า</th>
+              <th>รายละเอียด</th>
+              <th>ราคา</th>
+              <th>คงเหลือ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for name, detail, price, qty in products %}
+            <tr>
+              <td>{{ name }}</td>
+              <td>{{ detail }}</td>
+              <td>{{ price }}</td>
+              <td>{{ qty }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+
+
+    </div>
+
+
+
+    <!-- กล่องแชท AI -->
+    <div class="chatbox">
+      <h2>💬 AI Chat bot</h2>
+      <div class="chat-body">
+        {% if history %}
+        {% for item in history %}
+        {% if item.role == 'user' %}
+        <div class="message user-message">
+          <div class="message-text">{{ item.content }}</div>
+        </div>
+        {% elif item.role == 'assistant' %}
+        <div class="message bot-message">
+          <div class="message-text"><strong>AI:</strong> {{ item.content }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+      </div>
+
+      <form method="POST" class="chat-form" id="chat-form">
+        <div class="chat-input-group">
+          <textarea id="message" name="message" class="message-input" placeholder="พิมพ์คำถาม..." required></textarea>
+          <div class="chat-buttons">
+            <button type="submit" class="send-btn">ส่ง</button>
+            <button type="button" class="send-btn reset-btn" onclick="resetChat()">เริ่มใหม่</button>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    function resetChat() {
+      fetch('/reset', { method: 'POST' })
+        .then(() => {
+          document.querySelector(".chat-body").innerHTML = ""; // เคลียร์ข้อความแชท
+          document.getElementById("message").value = "";        // ล้าง input
+        });
+    }
+
+  </script>
+
+
+
+
+  </div>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    document.getElementById("addForm").addEventListener("submit", async function (e) {
+      e.preventDefault(); // ป้องกันการ reload หน้า
+
+      const formData = new FormData(this);
+
+      try {
+        const res = await fetch("/add", {
+          method: "POST",
+          body: formData
+        });
+
+        const text = await res.text();
+
+        if (res.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "สำเร็จ!",
+            text: text,
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => {
+            location.reload(); // รีโหลดหน้า
+          });
+        } else {
+          throw new Error(text);
+        }
+
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "เกิดข้อผิดพลาด",
+          text: err.message
+        });
+      }
+    });
+  </script>
+
+</body>
+
+</html>
