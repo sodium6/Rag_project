@@ -1,11 +1,11 @@
 from flask import Flask, request, render_template, session, redirect, url_for
-from sentence_transformers import SentenceTransformer
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
 from flask_session import Session
-from huggingface_hub import InferenceClient   # <— client HF
+from huggingface_hub import InferenceClient   
 from dotenv import load_dotenv
 import os, psycopg2, urllib.parse as up
+import typing as T
 
 load_dotenv() 
 app = Flask(__name__)
@@ -25,8 +25,28 @@ hf_client = InferenceClient(
 
 
 #-------------------------------------- Embedder model --------------------------------------
-embedder = SentenceTransformer("BAAI/bge-m3")
+class RemoteEmbedder:
+    """
+    ให้เมทอด .encode() เหมือน SentenceTransformer
+    แต่ไปเรียก HF Inference API (feature-extraction) แทน
+    """
+    def __init__(self,
+                 model_name: str = "BAAI/bge-m3",
+                 token: str | None = None):
+        self.client = InferenceClient(model=model_name, token=token)
 
+    def encode(self, texts: T.Union[str, list[str]], **kw):
+        # รองรับ string เดี่ยว หรือ list[str] ตามสเปก ST
+        single = isinstance(texts, str)
+        if single:
+            texts = [texts]
+
+        # ไม่รองรับ batch จริง → loop
+        vecs = [self.client.feature_extraction(t, truncate=True) for t in texts]
+        return vecs[0] if single else vecs
+
+# ─── 3. สร้าง “embedder” ตัวเดียวกับชื่อเดิม ───────────────────
+embedder = RemoteEmbedder(token=HF_TOKEN)    # ← ชื่อและ method เดิม
 
 
 
