@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, session, redirect, url_for
-import ollama
 from sentence_transformers import SentenceTransformer
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
